@@ -80,6 +80,7 @@ func (s *Server) handleMessage(m *Message) {
 		m.client.player = p
 		m.client.stage = STATE_PLAYING
 	case STATE_PLAYING:
+		m.client.player.handleMessage(m)
 		// TODO: world must handle message
 	}
 }

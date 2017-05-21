@@ -26,3 +26,11 @@ func (e *Player) GetName() string {
 func (e *Player) GetDescription() string {
 	return "Ein Spieler."
 }
+
+func (p *Player) handleMessage(m *server.Message) {
+	// TODO: use Action from action.go to implement matching and support aliases
+	switch m.GetAction() {
+	case "sage":
+	case "betrachte":
+	}
+}
