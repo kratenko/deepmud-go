@@ -18,10 +18,12 @@ func (w *World) RemoveEntity(e Entity) {
 	delete(w.entities, e.GetId())
 }
 
-func (w *World) build() {
+func New() *World {
+	w := &World{}
 	r1 := NewRoom(w.NextId())
 	r1.Description = "Du stehst auf einem Dorfplatz"
 	r1.Name = "Dorfplatz"
 
 	w.InsertEntity(r1)
+	return w
 }

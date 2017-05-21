@@ -2,7 +2,9 @@ package world
 
 type Room struct {
 	BaseEntity
-	contents []Entity
+	contents    []Entity
+	Name        string
+	Description string
 }
 
 func NewRoom(id EntityId) *Room {
@@ -10,4 +12,12 @@ func NewRoom(id EntityId) *Room {
 		BaseEntity: BaseEntity{id: id},
 		contents:   make([]Entity, 0),
 	}
+}
+
+func (r *Room) GetName() string {
+	return r.Name
+}
+
+func (r *Room) GetDescription() string {
+	return r.Description
 }

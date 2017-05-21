@@ -2,22 +2,27 @@ package server
 
 import (
 	"bufio"
+	"fmt"
 	"net"
-
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"fmt"
+	"github.com/kratenko/deepmud-go/world"
 )
 
 type Server struct {
 	mu              sync.Mutex
 	currentClientId uint
 	clients         map[net.Conn]*client
+	world           *world.World
 }
 
 func ListenAndServe(addr string) error {
-	server := &Server{clients: make(map[net.Conn]*client)}
+
+	server := &Server{
+		clients: make(map[net.Conn]*client),
+		world:   world.New(),
+	}
 	return server.ListenAndServe(addr)
 }
 
@@ -51,20 +56,18 @@ func (s *Server) ListenAndServe(addr string) error {
 
 func handleClient(server *Server, client *client) {
 	client.SendTextLn("Willkommen in DeepMud. Wer bist du?")
-	
-	
 
 	scanner := bufio.NewScanner(client.conn)
 	for scanner.Scan() {
 		logrus.WithField("id", client.id).WithField("text", scanner.Text()).Info("Got text")
 		msg := &Message{client, scanner.Text()}
-		server.handleMessage(msg);
+		server.handleMessage(msg)
 	}
 	logrus.WithField("id", client.id).Info("Client connection broke")
 	client.server.removeClient(client)
 }
 
-func (server Server) handleMessage(m *Message) {
+func (s *Server) handleMessage(m *Message) {
 	switch m.client.stage {
 	case STAGE_USERNAME:
 		m.client.username = m.Text
@@ -73,7 +76,11 @@ func (server Server) handleMessage(m *Message) {
 	case STAGE_PASSWORD:
 		m.client.password = m.Text
 		m.client.SendTextLn("Willkommen in der Welt von DeepMud, schau dich in Ruhe um.")
+		p := world.NewPlayer(s.world, m.client)
+		m.client.player = p
 		m.client.stage = STATE_PLAYING
+	case STATE_PLAYING:
+		// TODO: world must handle message
 	}
 }
 
