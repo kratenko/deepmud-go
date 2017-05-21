@@ -22,7 +22,7 @@ func main() {
 	}
 
 	cmd.PersistentFlags().StringP("config", "c", "config", "Config file name, default extension is JSON if not given")
-	cmd.PersistentFlags().StringP("addr", "", "localhost:4242", "Address and port to bind")
+	cmd.PersistentFlags().StringP("addr", "", ":4242", "Address and port to bind")
 
 	if err := cmd.Execute(); err != nil {
 		panic(err)

@@ -4,16 +4,19 @@ import (
 	"bufio"
 	"net"
 
+	"sync"
+
 	"github.com/Sirupsen/logrus"
 )
 
 type Server struct {
+	mu              sync.Mutex
+	currentClientId uint
+	clients         map[net.Conn]*client
 }
 
-var Default *Server
-
 func ListenAndServe(addr string) error {
-	server := &Server{}
+	server := &Server{clients: make(map[net.Conn]*client)}
 	return server.ListenAndServe(addr)
 }
 
@@ -33,15 +36,29 @@ func (s *Server) ListenAndServe(addr string) error {
 		if err != nil {
 			logrus.WithError(err).Error("Error on accept")
 		}
+		s.currentClientId++
+		client := &client{conn: conn, server: s, id: s.currentClientId}
+		s.mu.Lock()
+		s.clients[conn] = client
+		s.mu.Unlock()
+		logrus.WithField("id", client.id).WithField("addr", conn.RemoteAddr()).Info("New connection")
 		// Handle connections in a new goroutine.
-		go handleConnection(conn)
+		go handleClient(client)
 	}
 	return nil
 }
 
-func handleConnection(conn net.Conn) {
-	scanner := bufio.NewScanner(conn)
+func handleClient(client *client) {
+	scanner := bufio.NewScanner(client.conn)
 	for scanner.Scan() {
-		logrus.WithField("text", scanner.Text()).Info("Got text")
+		logrus.WithField("id", client.id).WithField("text", scanner.Text()).Info("Got text")
 	}
+	logrus.WithField("id", client.id).Info("Client connection broke")
+	client.server.removeClient(client)
+}
+
+func (s *Server) removeClient(client *client) {
+	s.mu.Lock()
+	delete(s.clients, client.conn)
+	s.mu.Unlock()
 }
